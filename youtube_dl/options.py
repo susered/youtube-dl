@@ -871,6 +871,12 @@ def parseOpts(overrideArguments=None):
         metavar='FORMAT', dest='convertsubtitles', default=None,
         help='Convert the subtitles to other format (currently supported: srt|ass|vtt|lrc)')
 
+    preproc = optparse.OptionGroup(parser, 'Pre-processing Options')
+    preproc.add_option(
+        '--url-preproc', '--url-preprocessing',
+        metavar='store_false', dest='url_preprocessing', default=False,
+        help='Enable URL pre-processing')
+
     parser.add_option_group(general)
     parser.add_option_group(network)
     parser.add_option_group(geo)
@@ -885,6 +891,7 @@ def parseOpts(overrideArguments=None):
     parser.add_option_group(authentication)
     parser.add_option_group(adobe_pass)
     parser.add_option_group(postproc)
+    parser.add_option_group(preproc)
 
     if overrideArguments is not None:
         opts, args = parser.parse_args(overrideArguments)
