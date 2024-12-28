@@ -9,7 +9,8 @@ import io
 import os
 import random
 import sys
-
+import traceback
+import urllib.error
 
 from .options import (
     parseOpts,
@@ -44,6 +45,8 @@ from .downloader import (
 from .extractor import gen_extractors, list_extractors
 from .extractor.adobepass import MSO_INFO
 from .YoutubeDL import YoutubeDL
+
+from .preprocessor import Preprocessor, DownloadHTML, URLOperations
 
 
 def _real_main(argv=None):
@@ -94,7 +97,61 @@ def _real_main(argv=None):
                 write_string('[debug] Batch file urls: ' + repr(batch_urls) + '\n')
         except IOError:
             sys.exit('ERROR: batch file %s could not be read' % opts.batchfile)
-    all_urls = batch_urls + [url.strip() for url in args]  # batch_urls are already striped in read_batch_urls
+
+    # Let us create an object to process URL tokens
+    url_operations = URLOperations.URLOperations(opts)
+    # Preprocessing instantiated class
+    url_preprocessing = Preprocessor.Preprocessor(opts)
+    # Download the HTML from the URL to extract the embedded URL
+    download_html = DownloadHTML.DownloadHTML(opts)
+    # The following is the original routine for processing the commandline arguments:
+    #all_urls = batch_urls + [url_preprocessing.reformat_full_url_for_embedded_url(url.strip()) for url in args]  # batch_urls are already striped in read_batch_urls
+
+    # This is format for parsing URLs, as opposed to the aforementioned one-liner, was chosen to accommodate any
+    # URLs that may need to be skipped, without exiting the whole invoked command.
+    collected_urls_from_urls: list = []
+    embedded_url: str = ""
+    for url in args:
+        # This first "try-except" is for full video pages without any embedded
+        try:
+            collect_urls_from_args = url_preprocessing.reformat_full_url_for_embedded_url(url.strip())
+        except (ValueError, IndexError) as vie:
+            write_string("[INFO] Skipping url, " + url + ", due to lack of matching Video ID format for URL conversion\n")
+            # Convert to an URL that is embedded so the URL can be processed
+            try:
+                # Retrieve the HTML source from the remote HTTPS service
+                write_string("Downloading HTML source page " + url.strip() + "\n")
+                html_source = download_html.make_http_request_to_remote_server(url.strip())
+                # Set the URL object
+                url_operations.url = url.strip()
+                # Search for the embedded URL in the downloaded HTML source
+                embedded_url = url_operations.search_for_embedded_url_from_html_source(html_source)
+
+            except urllib.error.HTTPError as he:
+                traceback.print_tb(he.__traceback__)
+
+            if embedded_url is not None or embedded_url != "":
+                write_string("Found embedded URL " + embedded_url + "\n")
+                collect_urls_from_args = embedded_url
+            else:
+                collect_urls_from_args = url.strip()
+
+            if opts.verbose:
+                traceback.print_tb(vie.__traceback__)
+        except TypeError as te:
+            write_string("[ERROR] Skipping url, " + url + ", due to bad URL formatting:\n")
+            if opts.verbose:
+                traceback.print_tb(te.__traceback__)
+            continue
+
+        if collect_urls_from_args != "" and collect_urls_from_args is not None:
+            collected_urls_from_urls += [collect_urls_from_args]
+
+    # Concatenate two different collected URLs between two different lists
+    all_urls = batch_urls + collected_urls_from_urls
+    # Remove duplicates from all_urls while keeping the original order submitted by the user
+    all_urls = list(dict.fromkeys(all_urls))
+
     _enc = preferredencoding()
     all_urls = [url.decode(_enc, 'ignore') if isinstance(url, bytes) else url for url in all_urls]
 
@@ -116,7 +173,8 @@ def _real_main(argv=None):
                 _SEARCHES = ('cute kittens', 'slithering pythons', 'falling cat', 'angry poodle', 'purple fish', 'running tortoise', 'sleeping bunny', 'burping cow')
                 _COUNTS = ('', '5', '10', 'all')
                 desc += ' (Example: "%s%s:%s" )' % (ie.SEARCH_KEY, random.choice(_COUNTS), random.choice(_SEARCHES))
-            write_string(desc + '\n', out=sys.stdout)
+                desc += "\n"
+            write_string(desc, out=sys.stdout)
         sys.exit(0)
     if opts.ap_list_mso:
         table = [[mso_id, mso_info['name']] for mso_id, mso_info in MSO_INFO.items()]
@@ -459,7 +517,8 @@ def _real_main(argv=None):
             parser.error(
                 'You must provide at least one URL.\n'
                 'Type youtube-dl --help to see a list of all options.')
-
+        # This is where the downloads are processed either by parsing of files or by singly listed URL on the
+        # commandline
         try:
             if opts.load_info_filename is not None:
                 retcode = ydl.download_with_info_file(expand_path(opts.load_info_filename))
