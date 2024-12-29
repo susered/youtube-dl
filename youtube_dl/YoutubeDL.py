@@ -148,7 +148,7 @@ def _catch_unsafe_file_extension(func):
 class YoutubeDL(object):
     """YoutubeDL class.
 
-    YoutubeDL objects are the ones responsible of downloading the
+    YoutubeDL objects are the ones responsible for downloading the
     actual video file and writing it to disk if the user has requested
     it, among some other tasks. In most cases there should be one per
     program. As, given a video URL, the downloader doesn't know how to
@@ -167,7 +167,7 @@ class YoutubeDL(object):
     the object constructor with arguments, it receives a dictionary of
     options instead. These options are available through the params
     attribute for the InfoExtractors to use. The YoutubeDL also
-    registers itself as the downloader in charge for the InfoExtractors
+    registers itself as the downloader in charge of the InfoExtractors
     that are added to it, so this is a "mutual registration".
 
     Available options:
@@ -969,7 +969,8 @@ class YoutubeDL(object):
         self._apply_header_cookies(url)
 
         ie_result = ie.extract(url)
-        if ie_result is None:  # Finished already (backwards compatibility; listformats and friends should be moved here)
+        print("\n[debug2] YoutubeDL -> __extract_info: ie_result = {}\n".format(ie_result))
+        if ie_result is None:  # Finished already (backwards compatibility; list formats and friends should be moved here)
             return
         if isinstance(ie_result, list):
             # Backwards compatibility: old IE result format
