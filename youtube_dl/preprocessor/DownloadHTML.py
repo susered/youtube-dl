@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import http
 import random
-import re
-from typing import Any
 
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen, Request
@@ -12,24 +9,16 @@ from ..utils import (
     write_string
 )
 from youtube_dl.preprocessor import (
-    domain_to_video_id_regex_filters_dict,
-    domain_to_path_regex_filters_dict,
-    domain_to_new_domain_regex_filters_dict,
-    generic_video_id_regex_filter,
-    regex_to_get_domain_from_url,
-    regex_to_get_path_from_url,
-    regex_to_parse_out_embedurl_from_rumble_html_source,
-    regexes_to_find_embedded_url_from_html_source,
     HTTP_USER_AGENTS
 )
 
-
 class DownloadHTML(object):
     """
+    This class will handle the download of HTML source from long URLs.
 
     """
     # Randomly choose from the list of HTTP user agents to use
-    HTTP_AGENT_HEADER: dict = HTTP_USER_AGENTS[random.choice([*range(len(HTTP_USER_AGENTS))])]
+    HTTP_AGENT_HEADER_DICT: dict = HTTP_USER_AGENTS[random.choice([*range(len(HTTP_USER_AGENTS))])]
     HTTP_TIMEOUT: int = 10
 
     def __init__(self, opts):
@@ -44,6 +33,7 @@ class DownloadHTML(object):
     @property
     def url(self) -> str:
         """
+        Getter for the URL property.
 
         :return: string
         """
@@ -52,6 +42,7 @@ class DownloadHTML(object):
     @url.setter
     def url(self, url: str) -> None:
         """
+        Setter for the URL property.
 
         :param url:
         :return:
@@ -61,6 +52,7 @@ class DownloadHTML(object):
     @url.deleter
     def url(self) -> None:
         """
+        Deleter for the URL property.
 
         :return: None
         """
@@ -69,6 +61,7 @@ class DownloadHTML(object):
     @property
     def http_status(self) -> str:
         """
+        Getter for the HTTP status property.
 
         :return: string
         """
@@ -77,6 +70,7 @@ class DownloadHTML(object):
     @http_status.setter
     def http_status(self, http_status: str) -> None:
         """
+        Setter for the HTTP status property.
 
         :param http_status:
         :return:
@@ -86,6 +80,7 @@ class DownloadHTML(object):
     @http_status.deleter
     def http_status(self) -> None:
         """
+        Deleter for the HTTP status property.
 
         :return: None
         """
@@ -94,6 +89,7 @@ class DownloadHTML(object):
     @property
     def domain(self) -> str:
         """
+        Getter for the DNS domain property.
 
         :return: str
         """
@@ -102,6 +98,7 @@ class DownloadHTML(object):
     @domain.setter
     def domain(self, domain: str) -> None:
         """
+        Setter for the DNS domain property.
 
         :param domain:
         :return:
@@ -111,6 +108,7 @@ class DownloadHTML(object):
     @domain.deleter
     def domain(self) -> None:
         """
+        Deleter for the DNS domain property.
 
         :return: None
         """
@@ -118,15 +116,24 @@ class DownloadHTML(object):
 
     def make_http_request_to_remote_server(self, url: str, headers: dict = None) -> str:
         """
+        This method will simply download the HTML source from a URL using a randomly chosen User-Agent from
+        a dictionary.
 
         :param url: str: URL for remote HTTP service
         :param headers: dict: HTTP Agent header as a dictionary
         :return: str : Returns HTML body from remote server.
         """
-        self._url = url
-
+        if self.opts.verbose:
+            write_string("[INFO][PRE-PROCESSOR] headers = " + str(headers) + "\n")
         if headers is None:
-            headers = self.HTTP_AGENT_HEADER
+            # HTTP_AGENT_HEADER_DICT is of type dict() that must be extracted
+            headers = self.HTTP_AGENT_HEADER_DICT
+        if self.opts.verbose:
+            write_string("[INFO][PRE-PROCESSOR] headers = " + str(headers) + "\n")
+
+        self._url = url
+        if self.opts.verbose:
+            write_string("[INFO][PRE-PROCESSOR] url = " + str(url) + "\n")
 
         request = Request(url, headers=headers or {})
         try:
@@ -137,6 +144,9 @@ class DownloadHTML(object):
             character_set = response.headers.get_content_charset()
             decoded_body: str = body.decode(character_set)
 
+            if self.opts.verbose:
+                write_string("[INFO][PRE-PROCESSOR] HTTP Response status = " + str(self._http_status) + "\n")
+
             return decoded_body
 
         except HTTPError as he:
@@ -144,4 +154,4 @@ class DownloadHTML(object):
         except URLError as ue:
             write_string(ue.reason)
         except TimeoutError:
-            write_string("Request timed out elapsed past default of " + str(self.HTTP_TIMEOUT))
+            write_string("[ERROR][PRE-PROCESSOR]Request timed out elapsed past default of " + str(self.HTTP_TIMEOUT))
