@@ -8,11 +8,12 @@ from urllib.request import urlopen, Request
 from ..utils import (
     write_string
 )
+from .URLOperations import URLOperations
 from youtube_dl.preprocessor import (
     HTTP_USER_AGENTS
 )
 
-class DownloadHTML(object):
+class DownloadHTML(URLOperations):
     """
     This class will handle the download of HTML source from long URLs.
 
@@ -24,39 +25,13 @@ class DownloadHTML(object):
     def __init__(self, opts):
         """
         """
+        super().__init__()
+
         self.opts = opts
         self._url = None
         self._http_status = None
         self._domain = None
         self._video_id_regex_filter = None
-
-    @property
-    def url(self) -> str:
-        """
-        Getter for the URL property.
-
-        :return: string
-        """
-        return self._url
-
-    @url.setter
-    def url(self, url: str) -> None:
-        """
-        Setter for the URL property.
-
-        :param url:
-        :return:
-        """
-        self._url = url
-
-    @url.deleter
-    def url(self) -> None:
-        """
-        Deleter for the URL property.
-
-        :return: None
-        """
-        del self._url
 
     @property
     def http_status(self) -> str:
@@ -85,34 +60,6 @@ class DownloadHTML(object):
         :return: None
         """
         del self._http_status
-
-    @property
-    def domain(self) -> str:
-        """
-        Getter for the DNS domain property.
-
-        :return: str
-        """
-        return self._domain
-
-    @domain.setter
-    def domain(self, domain: str) -> None:
-        """
-        Setter for the DNS domain property.
-
-        :param domain:
-        :return:
-        """
-        self._domain = domain
-
-    @domain.deleter
-    def domain(self) -> None:
-        """
-        Deleter for the DNS domain property.
-
-        :return: None
-        """
-        del self._domain
 
     def make_http_request_to_remote_server(self, url: str, headers: dict = None) -> str:
         """
