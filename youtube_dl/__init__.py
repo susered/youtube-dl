@@ -46,7 +46,7 @@ from .extractor import gen_extractors, list_extractors
 from .extractor.adobepass import MSO_INFO
 from .YoutubeDL import YoutubeDL
 
-from .preprocessor import Preprocessor, DownloadHTML, URLOperations
+from .preprocessor import Preprocessor, DownloadHTML, URLOperations, regexes_to_find_embedded_url_from_html_source
 
 
 def _real_main(argv=None):
@@ -113,30 +113,46 @@ def _real_main(argv=None):
     preproc_collected_urls_from_urls: list = []
     embedded_url: str = ""
     for url in args:
-        # This first "try-except" converts a long URL to an embedded that can be processed
-        try:
-            # Retrieve the HTML source from the remote HTTPS service
-            write_string("[INFO][PRE-PROCESSOR] Downloading HTML source page " + url.strip() + "\n")
-            html_source = download_html.make_http_request_to_remote_server(url.strip())
-            # Set the URL object
-            url_operations.url = url.strip()
-            # Search for the embedded URL in the downloaded HTML source
-            embedded_url = url_operations.search_for_embedded_url_from_html_source(html_source)
-            if embedded_url is not None or embedded_url != "":
-                preproc_collect_urls_from_args = embedded_url
-        except urllib.error.HTTPError as he:
-            write_string('[ERROR][PRE-PROCESSOR] HTTP error occurred on URL " + url + ":\n')
-            traceback.print_tb(he.__traceback__)
+        # Simple assignment so url.strip() is only processed once
+        url_strip: str = url.strip()
+        # Set the "url" object attribute
+        url_operations.url = url_strip
+        # Get the DNS domain of the user-submitted URL
+        url_operations.domain = url_operations.get_domain_from_url()
+        # debug and verbose outputs
+        if opts.verbose:
+            write_string("url_operations.domain = %s\n" % url_operations.domain)
+        if opts.verbose:
+            regex_for_embedded_url = regexes_to_find_embedded_url_from_html_source.get(url_operations.domain)
+            write_string("regex_for_embedded_url = %s\n" % regex_for_embedded_url)
+        # If we cannot find the RegEx related to the domain, then the URL/domain cannot be pre-processed
+        if regexes_to_find_embedded_url_from_html_source.get(url_operations.domain) is not None:
+            # This first "try-except" converts a long URL to an embedded that can be processed
+            try:
+                # Retrieve the HTML source from the remote HTTPS service
+                write_string("[INFO][PRE-PROCESSOR] Downloading HTML source page from %s\n" % url_strip)
+                html_source = download_html.make_http_request_to_remote_server(url.strip())
+                # Set the URL object
+                url_operations.url = url.strip()
+                # Search for the embedded URL in the downloaded HTML source
+                embedded_url = url_operations.search_for_embedded_url_from_html_source(html_source)
+                if embedded_url is not None or embedded_url != "":
+                    preproc_collect_urls_from_args = embedded_url
+            except urllib.error.HTTPError as he:
+                write_string('[ERROR][PRE-PROCESSOR] HTTP error occurred on URL %s:\n' % url_strip)
+                traceback.print_tb(he.__traceback__)
+        else:
+            preproc_collect_urls_from_args = url_strip
 
         if opts.url_preprocessing is not None and opts.url_preprocessing is True:
             # This second "try-except" is for full video pages without any embedded
             try:
                 preproc_collect_urls_from_args = url_preprocessing.reformat_full_url_for_embedded_url(url.strip())
             except (ValueError, IndexError) as vie:
-                write_string("[INFO][PRE-PROCESSOR] Skipping url, " + url + ", due to lack of a usable video ID found in URL\n")
+                write_string("[INFO][PRE-PROCESSOR] Skipping url, %s, lack of a video ID in URL\n" % url_strip)
 
                 if embedded_url is not None or embedded_url != "":
-                    write_string("[INFO][PRE-PROCESSOR]Found embedded URL " + embedded_url + "\n")
+                    write_string("[INFO][PRE-PROCESSOR]Found embedded URL %s\n" % url_strip)
                     preproc_collect_urls_from_args = embedded_url
                 else:
                     preproc_collect_urls_from_args = url.strip()
@@ -144,7 +160,7 @@ def _real_main(argv=None):
                 if opts.verbose:
                     traceback.print_tb(vie.__traceback__)
             except TypeError as te:
-                write_string("[ERROR][PRE-PROCESSOR] Skipping url, " + url + ", due to bad URL formatting:\n")
+                write_string("[ERROR][PRE-PROCESSOR] Skipping url, %s, due to bad URL formatting:\n" % url_strip)
                 if opts.verbose:
                     traceback.print_tb(te.__traceback__)
                 continue
