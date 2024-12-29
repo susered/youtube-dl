@@ -5,6 +5,8 @@ generic_video_id_regex_filter: str = r'\/([0-9a-zA-Z]*)-'
 regex_to_get_domain_from_url: str = r'https?:\/\/([0-9a-zA-Z\.\-]*)\/.*'
 regex_to_get_path_from_url: str = r'https?:\/\/[0-9a-zA-Z\.\-]*\/(.*)\/?'
 
+#
+# This maps a DNS domain to the RegEx that will govern the video ID extraction
 domain_to_video_id_regex_filters_dict: dict = {
     'rumble.com': generic_video_id_regex_filter,
     'bitchute.com': r'.*\/video\/([0-9a-zA-Z]*)',
@@ -12,6 +14,8 @@ domain_to_video_id_regex_filters_dict: dict = {
 }
 domain_to_video_id_regex_filters_dict.setdefault('default', generic_video_id_regex_filter)
 
+#
+# This maps a DNS domain to the URL path that contains the video ID
 domain_to_path_regex_filters_dict: dict = {
     'rumble.com': 'embed',
     'bitchute.com': 'video',
@@ -19,6 +23,8 @@ domain_to_path_regex_filters_dict: dict = {
 }
 domain_to_path_regex_filters_dict.setdefault('default', '')
 
+#
+# This maps a DNS domain to the DNS domain that has the embedded URL so the video can be downloaded
 domain_to_new_domain_regex_filters_dict: dict = {
     'rumble.com': 'rumble.com',
     'bitchute.com': 'old.bitchute.com',
@@ -27,13 +33,16 @@ domain_to_new_domain_regex_filters_dict: dict = {
 domain_to_new_domain_regex_filters_dict.setdefault('default', '')
 
 #
-#
+# This is a dictionary mapping DNS domain to embedded URL RegEx
 regex_to_parse_out_embedurl_from_rumble_html_source: str = r'.*\",\"embedUrl\":\"(https?:\/\/.*\/)\",\"url\":.*'
 regexes_to_find_embedded_url_from_html_source: dict = {
     'rumble.com': regex_to_parse_out_embedurl_from_rumble_html_source,
 }
 regexes_to_find_embedded_url_from_html_source.setdefault('default', 'default')
 
+#
+# List of HTTP User-Agents for retrieving remote HTML source for videos
+#
 # Updated on 12/26/2024 from https://useragents.me/#most-common-desktop-useragents-json-csv
 HTTP_USER_AGENTS: list = [
     {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.1'},
