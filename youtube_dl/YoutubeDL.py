@@ -969,7 +969,7 @@ class YoutubeDL(object):
         self._apply_header_cookies(url)
 
         ie_result = ie.extract(url)
-        print("\n[debug2] YoutubeDL -> __extract_info: ie_result = {}\n".format(ie_result))
+        # print("\n[debug2] YoutubeDL -> __extract_info: ie_result = {}\n".format(ie_result))
         if ie_result is None:  # Finished already (backwards compatibility; list formats and friends should be moved here)
             return
         if isinstance(ie_result, list):
