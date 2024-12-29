@@ -6,22 +6,18 @@ from ..utils import (
     write_string
 )
 from youtube_dl.preprocessor import (
-    domain_to_video_id_regex_filters_dict,
-    domain_to_path_regex_filters_dict,
-    domain_to_new_domain_regex_filters_dict,
     generic_video_id_regex_filter,
     regex_to_get_domain_from_url,
     regex_to_get_path_from_url,
-    regex_to_parse_out_embedurl_from_rumble_html_source,
     regexes_to_find_embedded_url_from_html_source
 )
 
-
 class URLOperations(object):
     """
+    This class employs all URL-related operations and manipulations.
 
     """
-    def __init__(self, opts):
+    def __init__(self, opts=None):
         """
         """
         self.opts = opts
@@ -32,6 +28,7 @@ class URLOperations(object):
     @property
     def url(self) -> str:
         """
+        Getter for the URL property.
 
         :return: string
         """
@@ -40,6 +37,7 @@ class URLOperations(object):
     @url.setter
     def url(self, url: str) -> None:
         """
+        Setter for the URL property.
 
         :param url:
         :return:
@@ -49,6 +47,7 @@ class URLOperations(object):
     @url.deleter
     def url(self) -> None:
         """
+        Deleter for the URL property.
 
         :return: None
         """
@@ -57,6 +56,7 @@ class URLOperations(object):
     @property
     def domain(self) -> str:
         """
+        Getter for the DNS domain property.
 
         :return: str
         """
@@ -65,6 +65,7 @@ class URLOperations(object):
     @domain.setter
     def domain(self, domain: str) -> None:
         """
+        Setter for the DNS domain property.
 
         :param domain:
         :return:
@@ -74,6 +75,7 @@ class URLOperations(object):
     @domain.deleter
     def domain(self) -> None:
         """
+        Deleter for the DNS domain property.
 
         :return: None
         """
@@ -82,6 +84,7 @@ class URLOperations(object):
     @property
     def video_id_regex_filter(self) -> str:
         """
+        Getter for video ID RegEx filter
 
         :return: str
         """
@@ -90,6 +93,7 @@ class URLOperations(object):
     @video_id_regex_filter.setter
     def video_id_regex_filter(self, video_id_regex_filter: str) -> None:
         """
+        Setter for video ID RegEx filter
 
         :param video_id_regex_filter: str
         :return: None
@@ -99,6 +103,7 @@ class URLOperations(object):
     @video_id_regex_filter.deleter
     def video_id_regex_filter(self) -> None:
         """
+        Deleter for video ID RegEx filter
 
         :return: None
         """
@@ -106,16 +111,17 @@ class URLOperations(object):
 
     def get_domain_from_url(self) -> str:
         """
+        Get domain from a set URL object
 
         :return: str
         """
-
         compiled_regex_domain = re.compile(regex_to_get_domain_from_url)
 
         return compiled_regex_domain.findall(self.url)[0]
 
     def get_path_from_url(self) -> str:
         """
+        Get path from a set URL object
 
         :return: str
         """
@@ -125,11 +131,14 @@ class URLOperations(object):
 
     def search_for_embedded_url_from_html_source(self, html_body: str) -> str:
         """
+        Use a RegEx to search the HTML body source for the embedded URL
 
         :param html_body: str
         :return: str
         """
         self.domain = self.get_domain_from_url()
+        if self.opts.verbose:
+            write_string("[INFO] self.domain = %s\n" % self.domain)
         compiled_regex: [str] = re.compile(regexes_to_find_embedded_url_from_html_source[self.domain])
         embedded_url: str = compiled_regex.findall(html_body)[0]
 
