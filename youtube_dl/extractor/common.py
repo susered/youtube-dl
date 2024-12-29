@@ -94,7 +94,6 @@ from ..utils import (
     xpath_with_ns,
 )
 
-
 class InfoExtractor(object):
     """Information Extractor class.
 
@@ -564,11 +563,13 @@ class InfoExtractor(object):
 
     def extract(self, url):
         """Extracts URL information and returns it in list of dicts."""
+        # print("\n[debug2] InfoExtractor -> extract: url = {}\n".format(url))
         try:
             for _ in range(2):
                 try:
                     self.initialize()
                     ie_result = self._real_extract(url)
+                    # print("\n[debug2] InfoExtractor -> extract: ie_result = {}\n".format(url))
                     if self._x_forwarded_for_ip:
                         ie_result['__x_forwarded_for_ip'] = self._x_forwarded_for_ip
                     return ie_result
