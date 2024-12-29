@@ -135,6 +135,11 @@ from .simplecast import SimplecastIE
 
 
 class GenericIE(InfoExtractor):
+    """
+    The MD5 hash of videos is computed as follows with the number of bytes 10241:
+
+        dd if=Snow\\ Kitty-v5xc2je.mp4 ibs=1 status=none count=10241 | openssl dgst -md5
+    """
     IE_DESC = 'Generic downloader that works on some sites'
     _VALID_URL = r'.*'
     IE_NAME = 'generic'
@@ -2321,6 +2326,17 @@ class GenericIE(InfoExtractor):
                 'age_limit': 18,
             },
         }, {
+            'url': 'https://rumble.com/embed/v5xc2je/?pub=4',
+            'md5': 'b899e5d786df7f965ed28d5b472f8533',
+            'info_dict': {
+                'id': 'v5xc2je',
+                'display_id': 'snow-kitty',
+                'ext': 'mp4',
+                'title': 'Snow Kitty',
+                'height': 720,
+                'age_limit': 18,
+            },
+        }, {
             # would like to use the yt-dl test video but searching for
             # '"\'/\\ä↭𝕐' fails, so using an old vid from YouTube Korea
             'note': 'Test default search',
@@ -2346,7 +2362,8 @@ class GenericIE(InfoExtractor):
         """Report information extraction."""
         self._downloader.to_screen('[redirect] Following redirect to %s' % new_url)
 
-    def _extract_rss(self, url, video_id, doc):
+    @staticmethod
+    def _extract_rss(url, video_id, doc):
         playlist_title = doc.find('./channel/title').text
         playlist_desc_el = doc.find('./channel/description')
         playlist_desc = None if playlist_desc_el is None else playlist_desc_el.text
@@ -2531,6 +2548,7 @@ class GenericIE(InfoExtractor):
             return self.url_result(self.http_scheme() + url)
 
         parsed_url = compat_urlparse.urlparse(url)
+        # print("\n\n[debug2] GenericIE -> _real_extract -> parsed_url.scheme = {}\n\n".format(parsed_url.scheme))
         if not parsed_url.scheme:
             default_search = self._downloader.params.get('default_search')
             if default_search is None:
