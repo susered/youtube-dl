@@ -109,46 +109,52 @@ def _real_main(argv=None):
 
     # This is format for parsing URLs, as opposed to the aforementioned one-liner, was chosen to accommodate any
     # URLs that may need to be skipped, without exiting the whole invoked command.
-    collected_urls_from_urls: list = []
+    preproc_collect_urls_from_args: str = ""
+    preproc_collected_urls_from_urls: list = []
     embedded_url: str = ""
     for url in args:
-        # This first "try-except" is for full video pages without any embedded
+        # This first "try-except" converts a long URL to an embedded that can be processed
         try:
-            collect_urls_from_args = url_preprocessing.reformat_full_url_for_embedded_url(url.strip())
-        except (ValueError, IndexError) as vie:
-            write_string("[INFO] Skipping url, " + url + ", due to lack of matching Video ID format for URL conversion\n")
-            # Convert to an URL that is embedded so the URL can be processed
-            try:
-                # Retrieve the HTML source from the remote HTTPS service
-                write_string("Downloading HTML source page " + url.strip() + "\n")
-                html_source = download_html.make_http_request_to_remote_server(url.strip())
-                # Set the URL object
-                url_operations.url = url.strip()
-                # Search for the embedded URL in the downloaded HTML source
-                embedded_url = url_operations.search_for_embedded_url_from_html_source(html_source)
-
-            except urllib.error.HTTPError as he:
-                traceback.print_tb(he.__traceback__)
-
+            # Retrieve the HTML source from the remote HTTPS service
+            write_string("[INFO][PRE-PROCESSOR] Downloading HTML source page " + url.strip() + "\n")
+            html_source = download_html.make_http_request_to_remote_server(url.strip())
+            # Set the URL object
+            url_operations.url = url.strip()
+            # Search for the embedded URL in the downloaded HTML source
+            embedded_url = url_operations.search_for_embedded_url_from_html_source(html_source)
             if embedded_url is not None or embedded_url != "":
-                write_string("Found embedded URL " + embedded_url + "\n")
-                collect_urls_from_args = embedded_url
-            else:
-                collect_urls_from_args = url.strip()
+                preproc_collect_urls_from_args = embedded_url
+        except urllib.error.HTTPError as he:
+            write_string('[ERROR][PRE-PROCESSOR] HTTP error occurred on URL " + url + ":\n')
+            traceback.print_tb(he.__traceback__)
 
-            if opts.verbose:
-                traceback.print_tb(vie.__traceback__)
-        except TypeError as te:
-            write_string("[ERROR] Skipping url, " + url + ", due to bad URL formatting:\n")
-            if opts.verbose:
-                traceback.print_tb(te.__traceback__)
-            continue
+        if opts.url_preprocessing is not None and opts.url_preprocessing is True:
+            # This second "try-except" is for full video pages without any embedded
+            try:
+                preproc_collect_urls_from_args = url_preprocessing.reformat_full_url_for_embedded_url(url.strip())
+            except (ValueError, IndexError) as vie:
+                write_string("[INFO][PRE-PROCESSOR] Skipping url, " + url + ", due to lack of a usable video ID found in URL\n")
 
-        if collect_urls_from_args != "" and collect_urls_from_args is not None:
-            collected_urls_from_urls += [collect_urls_from_args]
+                if embedded_url is not None or embedded_url != "":
+                    write_string("[INFO][PRE-PROCESSOR]Found embedded URL " + embedded_url + "\n")
+                    preproc_collect_urls_from_args = embedded_url
+                else:
+                    preproc_collect_urls_from_args = url.strip()
+
+                if opts.verbose:
+                    traceback.print_tb(vie.__traceback__)
+            except TypeError as te:
+                write_string("[ERROR][PRE-PROCESSOR] Skipping url, " + url + ", due to bad URL formatting:\n")
+                if opts.verbose:
+                    traceback.print_tb(te.__traceback__)
+                continue
+
+        # Collect all the user-submitted URLs have been pre-processed into embeddable URLs
+        if preproc_collect_urls_from_args != "" and preproc_collect_urls_from_args is not None:
+            preproc_collected_urls_from_urls += [preproc_collect_urls_from_args]
 
     # Concatenate two different collected URLs between two different lists
-    all_urls = batch_urls + collected_urls_from_urls
+    all_urls = batch_urls + preproc_collected_urls_from_urls
     # Remove duplicates from all_urls while keeping the original order submitted by the user
     all_urls = list(dict.fromkeys(all_urls))
 
@@ -494,6 +500,7 @@ def _real_main(argv=None):
         'geo_bypass': opts.geo_bypass,
         'geo_bypass_country': opts.geo_bypass_country,
         'geo_bypass_ip_block': opts.geo_bypass_ip_block,
+        'url_preprocessing': opts.url_preprocessing,
         # just for deprecation check
         'autonumber': opts.autonumber if opts.autonumber is True else None,
         'usetitle': opts.usetitle if opts.usetitle is True else None,
