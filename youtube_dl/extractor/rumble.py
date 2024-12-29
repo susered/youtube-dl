@@ -10,6 +10,7 @@ from ..utils import (
     try_get,
 )
 
+import re
 
 class RumbleEmbedIE(InfoExtractor):
     _VALID_URL = r'https?://(?:www\.)?rumble\.com/embed/(?:[0-9a-z]+\.)?(?P<id>[0-9a-z]+)'
@@ -28,7 +29,13 @@ class RumbleEmbedIE(InfoExtractor):
         'only_matching': True,
     }]
 
-    def _real_extract(self, url):
+    def _real_extract(self, url: str) -> dict:
+        """
+        Extract the contents of the remote URL JSON
+
+        :param url: str
+        :return: dict
+        """
         video_id = self._match_id(url)
         video = self._download_json(
             'https://rumble.com/embedJS/', video_id,
