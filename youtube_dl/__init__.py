@@ -46,7 +46,8 @@ from .extractor import gen_extractors, list_extractors
 from .extractor.adobepass import MSO_INFO
 from .YoutubeDL import YoutubeDL
 
-from .preprocessor import Preprocessor, DownloadHTML, URLOperations, regexes_to_find_embedded_url_from_html_source
+from .preprocessor import Preprocessor, DownloadHTML, URLOperations, regexes_to_find_embedded_url_from_html_source, \
+    domain_to_new_domain_regex_filters_dict, domain_to_video_id_regex_filters_dict, domain_to_path_regex_filters_dict
 
 
 def _real_main(argv=None):
@@ -121,12 +122,19 @@ def _real_main(argv=None):
         url_operations.domain = url_operations.get_domain_from_url()
         # debug and verbose outputs
         if opts.verbose:
-            write_string("url_operations.domain = %s\n" % url_operations.domain)
+            write_string("[debug2] url_operations.domain = %s\n" % url_operations.domain)
+        #
+        regex_for_embedded_url = regexes_to_find_embedded_url_from_html_source.get(url_operations.domain)
         if opts.verbose:
-            regex_for_embedded_url = regexes_to_find_embedded_url_from_html_source.get(url_operations.domain)
-            write_string("regex_for_embedded_url = %s\n" % regex_for_embedded_url)
+            write_string("[debug2] regex_for_embedded_url = %s\n" % str(regex_for_embedded_url))
+            write_string("[debug2] type(regex_for_embedded_url) = %s\n" % type(regex_for_embedded_url))
+
+        domain_to_new_domain_regex_filter: str = domain_to_new_domain_regex_filters_dict.get(url_operations.domain)
+        if opts.verbose:
+            write_string("[debug2] domain_to_new_domain_regex_filter = %s\n" % domain_to_new_domain_regex_filter)
+
         # If we cannot find the RegEx related to the domain, then the URL/domain cannot be pre-processed
-        if regexes_to_find_embedded_url_from_html_source.get(url_operations.domain) is not None:
+        if regex_for_embedded_url is not None:
             # This first "try-except" converts a long URL to an embedded that can be processed
             try:
                 # Retrieve the HTML source from the remote HTTPS service
@@ -141,6 +149,24 @@ def _real_main(argv=None):
             except urllib.error.HTTPError as he:
                 write_string('[ERROR][PRE-PROCESSOR] HTTP error occurred on URL %s:\n' % url_strip)
                 traceback.print_tb(he.__traceback__)
+        elif domain_to_new_domain_regex_filter is not None:
+            # If the mapping contains a domain with its RegEx filter, then process the pattern further
+            map_from_one_domain_to_another: str = domain_to_new_domain_regex_filters_dict.get(url_operations.domain)
+            if opts.verbose:
+                write_string("[debug2] map_from_one_domain_to_another = %s\n" % map_from_one_domain_to_another)
+            map_domain_to_url_path: str = url_operations.get_path_from_url()
+            if opts.verbose:
+                write_string("[debug2] map_domain_to_url_path = %s\n" % map_domain_to_url_path)
+
+            try:
+                # Construct the URL for extraction
+                url_string = "https://" + map_from_one_domain_to_another + "/" + map_domain_to_url_path
+                write_string("[INFO][PRE-PROCESSOR] Converted %s to usable DNS domain\n" % url_strip)
+                if opts.verbose:
+                    write_string("[debug2] url_string = %s\n" % url_string)
+                preproc_collect_urls_from_args = url_string
+            except ValueError as ve:
+                traceback.print_tb(sys.exc_info()[2])
         else:
             preproc_collect_urls_from_args = url_strip
 
