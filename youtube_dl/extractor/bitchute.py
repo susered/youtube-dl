@@ -5,10 +5,11 @@ import itertools
 import re
 
 from .common import InfoExtractor
+from .. import write_string
 from ..utils import (
     orderedSet,
     unified_strdate,
-    urlencode_postdata,
+    urlencode_postdata, ExtractorError,
 )
 
 
@@ -47,20 +48,28 @@ class BitChuteIE(InfoExtractor):
             webpage, 'title', default=None) or self._html_search_meta(
             'description', webpage, 'title',
             default=None) or self._og_search_description(webpage)
+        write_string("[debug2] title = %s\n" % title)
 
         format_urls = []
-        for mobj in re.finditer(
-                r'addWebSeed\s*\(\s*(["\'])(?P<url>(?:(?!\1).)+)\1', webpage):
-            format_urls.append(mobj.group('url'))
-        format_urls.extend(re.findall(r'as=(https?://[^&"\']+)', webpage))
+        #for mobj in re.finditer(r'addWebSeed\s*\(\s*(["\'])(?P<url>(?:(?!\1).)+)\1', webpage):
+            #format_urls.append(mobj.group('url'))
+            #write_string("[debug2] mobj.group('url') %s\n" % mobj.group('url'))
+        format_urls.extend(re.findall(r'(https?:\/\/[^&"\']+)', webpage))
+        write_string("[debug2] format_urls = %s\n" % str(format_urls))
 
-        formats = [
-            {'url': format_url}
-            for format_url in orderedSet(format_urls)]
+        if len(format_urls) <= 0:
+            raise ExtractorError('No URL formats found')
 
+        formats = [{'url': format_url} for format_url in orderedSet(format_urls)]
+        write_string("[debug2] formats = %s\n" % str(formats))
+
+        parse_html5_list = self._parse_html5_media_entries(url, webpage, video_id)
         if not formats:
-            formats = self._parse_html5_media_entries(
-                url, webpage, video_id)[0]['formats']
+            write_string("[debug2] url = %s\n" % url)
+            write_string("[debug2] webpage = %s\n" % webpage)
+            write_string("[debug2] video_id = %s\n" % video_id)
+            write_string("[debug2] length of 'parse_html5_list' is %s\n" % len(parse_html5_list))
+            formats = self._parse_html5_media_entries(url, webpage, video_id)[0]['formats']
 
         self._check_formats(formats, video_id)
         self._sort_formats(formats)
