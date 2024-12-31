@@ -9,7 +9,7 @@ regex_to_get_path_from_url: str = r'https?:\/\/[0-9a-zA-Z\.\-]*\/(.*)\/?'
 # This maps a DNS domain to the RegEx that will govern the video ID extraction
 domain_to_video_id_regex_filters_dict: dict = {
     'rumble.com': generic_video_id_regex_filter,
-    'bitchute.com': r'.*\/video\/([0-9a-zA-Z]*)',
+    'www.bitchute.com': r'.*\/video\/([0-9a-zA-Z]*)',
     'vimeo.com': r'.*\/([0-9a-zA-Z]*)',
 }
 domain_to_video_id_regex_filters_dict.setdefault('default', generic_video_id_regex_filter)
@@ -19,6 +19,7 @@ domain_to_video_id_regex_filters_dict.setdefault('default', generic_video_id_reg
 domain_to_path_regex_filters_dict: dict = {
     'rumble.com': 'embed',
     'bitchute.com': 'video',
+    'www.bitchute.com': 'video',
     'vimeo.com': '',
 }
 domain_to_path_regex_filters_dict.setdefault('default', '')
@@ -26,9 +27,8 @@ domain_to_path_regex_filters_dict.setdefault('default', '')
 #
 # This maps a DNS domain to the DNS domain that has the embedded URL so the video can be downloaded
 domain_to_new_domain_regex_filters_dict: dict = {
-    'rumble.com': 'rumble.com',
     'bitchute.com': 'old.bitchute.com',
-    'vimeo.com': 'vimeo.com',
+    'www.bitchute.com': 'old.bitchute.com',
 }
 domain_to_new_domain_regex_filters_dict.setdefault('default', '')
 
