@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-import re
+__author__ = ""
+__copyright__ = ""
+__license__ = ""
+__version__ = ""
+__maintainer__ = ""
+__email__ = ""
+__status__ = ""
+__doc__ = """
+
+"""
 
 from .URLOperations import URLOperations
 from ..utils import (
@@ -18,7 +27,7 @@ class Preprocessor(URLOperations):
     """
     This class file is for preprocessing URLs to get the URLs prepared as an embedded URL.
     """
-    def __init__(self, opts):
+    def __init__(self, opts=None):
         """
         """
         super().__init__()
@@ -27,25 +36,6 @@ class Preprocessor(URLOperations):
         self._url = None
         self._domain = None
         self._video_id_regex_filter = None
-
-    def get_domain_from_url(self) -> str:
-        """
-
-        :return: str
-        """
-
-        compiled_regex_domain = re.compile(regex_to_get_domain_from_url)
-
-        return compiled_regex_domain.findall(self.url)[0]
-
-    def get_path_from_url(self) -> str:
-        """
-
-        :return: str
-        """
-        compiled_regex_path = re.compile(regex_to_get_path_from_url)
-
-        return compiled_regex_path.findall(self.url)[0]
 
     def reformat_full_url_for_embedded_url(self, url: str) -> str | None:
         """
