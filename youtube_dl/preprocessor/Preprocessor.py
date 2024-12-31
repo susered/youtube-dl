@@ -19,8 +19,6 @@ from youtube_dl.preprocessor import (
     domain_to_video_id_regex_filters_dict,
     domain_to_path_regex_filters_dict,
     domain_to_new_domain_regex_filters_dict,
-    regex_to_get_domain_from_url,
-    regex_to_get_path_from_url,
 )
 
 class Preprocessor(URLOperations):
