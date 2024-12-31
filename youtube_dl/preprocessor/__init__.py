@@ -1,5 +1,17 @@
 from __future__ import unicode_literals
 
+__author__ = ""
+__copyright__ = ""
+__license__ = ""
+__version__ = ""
+__maintainer__ = ""
+__email__ = ""
+__status__ = ""
+__doc__ = """
+The idea is that we map DNS domains, paths and video IDs to a working URL for extraction. This will alleviate any
+code changes to the various extractors. 
+"""
+
 # This RegEx filter works with a video ID as part of the URI
 generic_video_id_regex_filter: str = r'\/([0-9a-zA-Z]*)-'
 regex_to_get_domain_from_url: str = r'https?:\/\/([0-9a-zA-Z\.\-]*)\/.*'
