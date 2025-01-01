@@ -9,7 +9,7 @@ from youtube_dl.preprocessor import (
     generic_video_id_regex_filter,
     regex_to_get_domain_from_url,
     regex_to_get_path_from_url,
-    regexes_to_find_embedded_url_from_html_source
+    regexes_to_find_embedded_url_from_html_source, regex_to_determine_criteria_preprocessing_match
 )
 
 class URLOperations(object):
@@ -129,6 +129,30 @@ class URLOperations(object):
 
         return compiled_regex_path.findall(self.url)[0]
 
+    def number_of_url_tokens_for_preprocessing(self) -> int:
+        """
+        Count the number of tokens in a URL required for preprocessing.
+
+        :return: int
+        """
+        try:
+            compiled_regex: [str] = re.compile(regex_to_determine_criteria_preprocessing_match[self.domain])
+        except KeyError as ke:
+            write_string("[WARNING] Could not find a matching domain for pre-processing criteria.\n")
+            return 0
+
+        try:
+            list_of_tokens: list = compiled_regex.findall(self.url)
+        except IndexError as ie:
+            write_string("[WARNING] Could not find a matching domain for pre-processing criteria.\n")
+            return 0
+
+        try:
+            return len(list_of_tokens[0])
+        except IndexError as ie:
+            write_string("[WARNING] Could not find a matching domain for pre-processing criteria.\n")
+            return 0
+
     def search_for_embedded_url_from_html_source(self, html_body: str) -> str:
         """
         Use a RegEx to search the HTML body source for the embedded URL
@@ -139,10 +163,17 @@ class URLOperations(object):
         self.domain = self.get_domain_from_url()
         if self.opts.verbose:
             write_string("[INFO] self.domain = %s\n" % self.domain)
-        compiled_regex: [str] = re.compile(regexes_to_find_embedded_url_from_html_source[self.domain])
-        embedded_url: str = compiled_regex.findall(html_body)[0]
 
-        return embedded_url
+        embedded_url: str = ""
+        try:
+            compiled_regex: [str] = re.compile(regexes_to_find_embedded_url_from_html_source[self.domain])
+            embedded_url = compiled_regex.findall(html_body)[0]
+
+            return embedded_url
+        except IndexError as ie:
+            write_string("[ERROR] Embedded URL not found in HTML source!\n")
+
+            return embedded_url
 
     def get_video_id_from_url(self, video_id_regex: str = generic_video_id_regex_filter) -> str:
         """
