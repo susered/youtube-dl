@@ -98,7 +98,9 @@ class DownloadHTML(URLOperations):
 
         except HTTPError as he:
             write_string(he.status, he.reason)
+        except AssertionError as ae:
+            write_string(str(ae))
         except URLError as ue:
             write_string(ue.reason)
         except TimeoutError:
-            write_string("[ERROR][PRE-PROCESSOR]Request timed out elapsed past default of " + str(self.HTTP_TIMEOUT))
+            write_string("[ERROR][PRE-PROCESSOR]Request timed out elapsed past default of " + str(self.HTTP_TIMEOUT) + "\n")
