@@ -932,7 +932,7 @@ class InfoExtractor(object):
             self, url_or_request, video_id, note='Downloading JSON metadata',
             errnote='Unable to download JSON metadata', transform_source=None,
             fatal=True, encoding=None, data=None, headers={}, query={},
-            expected_status=None):
+            expected_status=None) -> dict:
         """
         Return the JSON object as a dict.
 
