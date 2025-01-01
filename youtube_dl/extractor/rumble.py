@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from .common import InfoExtractor
+from .. import write_string
 from ..compat import compat_str
 from ..utils import (
     determine_ext,
@@ -61,7 +62,16 @@ class RumbleEmbedIE(InfoExtractor):
         self._sort_formats(formats)
 
         author = video.get('author') or {}
-
+        """
+        write_string("id: video_id = %s\n" % video_id)
+        write_string("title: title = %s\n" % title)
+        write_string("formats: formats = %s\n" % formats)
+        write_string("thumbnail: thumbnail = %s\n" % video.get('i'))
+        write_string("timestamp: timestamp = %s\n" % parse_iso8601(video.get('pubDate')))
+        write_string("channel: channel = %s\n" % author.get('name'))
+        write_string("channel_url: channel_url = %s\n" % author.get('url'))
+        write_string("duration: duration = %s\n" % int_or_none(video.get('duration')))
+        """
         return {
             'id': video_id,
             'title': title,
