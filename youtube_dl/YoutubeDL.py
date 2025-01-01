@@ -378,6 +378,18 @@ class YoutubeDL(object):
     _playlist_level = 0
     _playlist_urls = set()
     _screen_file = None
+    DEFAULT_OS_MAX_FILENAME_LENGTH: int = 255
+    """
+    File System | Maximum File Name Length
+    ext2        | 255 bytes
+    ext3        | 255 bytes
+    ext4        | 255 bytes
+    exFAT       | 255 UTF - 16 characters
+    FAT32       | 255 UCS - 2 code units with VFAT LFNs
+    NTFS        | 255 characters
+    BTRFS       | 255 bytes
+    ext3cow     | 255 bytes
+    """
 
     def __init__(self, params=None, auto_init=True):
         """Create a FileDownloader object with the given options."""
@@ -770,6 +782,13 @@ class YoutubeDL(object):
             # with boundary-alike separator hack.
             sep = ''.join([random.choice(ascii_letters) for _ in range(32)])
             outtmpl = outtmpl.replace('%%', '%{0}%'.format(sep)).replace('$$', '${0}$'.format(sep))
+
+            # Automatically shorten the filename of the downloaded video file if it exceeds 255 characters
+            if len(outtmpl) >= self.DEFAULT_OS_MAX_FILENAME_LENGTH:
+                shortened_outtmpl: str = outtmpl[:self.DEFAULT_OS_MAX_FILENAME_LENGTH]
+                write_string("Filename shortened from, %s", outtmpl)
+                write_string(", to, %s\n" % shortened_outtmpl)
+                outtmpl = shortened_outtmpl
 
             # outtmpl should be expand_path'ed before template dict substitution
             # because meta fields may contain env variables we don't want to
@@ -1740,7 +1759,10 @@ class YoutubeDL(object):
             formats = info_dict['formats']
 
         def is_wellformed(f):
-            url = f.get('url')
+            try:
+                url = f.get('url')
+            except AttributeError as ae:
+                return False
             if not url:
                 self.report_warning(
                     '"url" field is missing or empty - skipping format, '
@@ -1980,6 +2002,13 @@ class YoutubeDL(object):
 
         if filename is None:
             return
+
+        # Automatically shorten the filename of the downloaded video file if it exceeds 255 characters
+        if len(filename) >= self.DEFAULT_OS_MAX_FILENAME_LENGTH:
+            shortened_filename: str = filename[:self.DEFAULT_OS_MAX_FILENAME_LENGTH]
+            write_string("Filename shortened from, %s", filename)
+            write_string(", to, %s\n" % shortened_filename)
+            filename = shortened_filename
 
         def ensure_dir_exists(path):
             try:
