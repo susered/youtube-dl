@@ -46,8 +46,16 @@ from .extractor import gen_extractors, list_extractors
 from .extractor.adobepass import MSO_INFO
 from .YoutubeDL import YoutubeDL
 
-from .preprocessor import Preprocessor, DownloadHTML, URLOperations, regexes_to_find_embedded_url_from_html_source, \
-    domain_to_new_domain_regex_filters_dict, domain_to_video_id_regex_filters_dict, domain_to_path_regex_filters_dict
+from .preprocessor import (
+    Preprocessor,
+    DownloadHTML,
+    URLOperations,
+    regexes_to_find_embedded_url_from_html_source,
+    domain_to_new_domain_regex_filters_dict,
+    domain_to_video_id_regex_filters_dict,
+    domain_to_path_regex_filters_dict,
+    regex_to_determine_criteria_preprocessing_match
+)
 
 
 def _real_main(argv=None):
@@ -133,8 +141,14 @@ def _real_main(argv=None):
         if opts.verbose:
             write_string("[debug2] domain_to_new_domain_regex_filter = %s\n" % domain_to_new_domain_regex_filter)
 
+        # Count the number of tokens in the URL to determine if the URL meets the criteria for pre-processing
+        is_url_fit_for_preprocessing: int = url_operations.number_of_url_tokens_for_preprocessing()
+        if opts.verbose:
+            write_string("[debug2] Token count for URL, %s, " % url_operations.url)
+            write_string("is %s\n" % is_url_fit_for_preprocessing)
+
         # If we cannot find the RegEx related to the domain, then the URL/domain cannot be pre-processed
-        if regex_for_embedded_url is not None:
+        if regex_for_embedded_url is not None and is_url_fit_for_preprocessing >= 1:
             # This first "try-except" converts a long URL to an embedded that can be processed
             try:
                 # Retrieve the HTML source from the remote HTTPS service
@@ -146,6 +160,8 @@ def _real_main(argv=None):
                 embedded_url = url_operations.search_for_embedded_url_from_html_source(html_source)
                 if embedded_url is not None or embedded_url != "":
                     preproc_collect_urls_from_args = embedded_url
+                else:
+                    preproc_collect_urls_from_args = url_strip
             except urllib.error.HTTPError as he:
                 write_string('[ERROR][PRE-PROCESSOR] HTTP error occurred on URL %s:\n' % url_strip)
                 traceback.print_tb(he.__traceback__)
