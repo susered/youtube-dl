@@ -8,12 +8,13 @@ from ..utils import (
     determine_ext,
     int_or_none,
     parse_iso8601,
-    try_get,
+    try_get, ExtractorError,
 )
 
 import re
 
 class RumbleEmbedIE(InfoExtractor):
+    DEBUG: bool = False
     _VALID_URL = r'https?://(?:www\.)?rumble\.com/embed/(?:[0-9a-z]+\.)?(?P<id>[0-9a-z]+)'
     _TESTS = [{
         'url': 'https://rumble.com/embed/v5pv5f',
@@ -41,6 +42,10 @@ class RumbleEmbedIE(InfoExtractor):
         video = self._download_json(
             'https://rumble.com/embedJS/', video_id,
             query={'request': 'video', 'v': video_id})
+        if not isinstance(video, dict):
+            raise ExtractorError("%s is most likely not found" % url,
+                                 None,
+                                 cause="'video' object type of '%s' when it should be of 'dict' type" % str(video))
         title = video['title']
 
         formats = []
@@ -62,16 +67,18 @@ class RumbleEmbedIE(InfoExtractor):
         self._sort_formats(formats)
 
         author = video.get('author') or {}
-        """
-        write_string("id: video_id = %s\n" % video_id)
-        write_string("title: title = %s\n" % title)
-        write_string("formats: formats = %s\n" % formats)
-        write_string("thumbnail: thumbnail = %s\n" % video.get('i'))
-        write_string("timestamp: timestamp = %s\n" % parse_iso8601(video.get('pubDate')))
-        write_string("channel: channel = %s\n" % author.get('name'))
-        write_string("channel_url: channel_url = %s\n" % author.get('url'))
-        write_string("duration: duration = %s\n" % int_or_none(video.get('duration')))
-        """
+
+        if self.DEBUG:
+            write_string("[debug2] id: video_id = %s\n" % video_id)
+            write_string("[debug2] title: title = %s\n" % title)
+            write_string("[debug2] author: author = %s\n" % author)
+            write_string("[debug2] formats: formats = %s\n" % formats)
+            write_string("[debug2] thumbnail: thumbnail = %s\n" % video.get('i'))
+            write_string("[debug2] timestamp: timestamp = %s\n" % parse_iso8601(video.get('pubDate')))
+            write_string("[debug2] channel: channel = %s\n" % author.get('name'))
+            write_string("[debug2] channel_url: channel_url = %s\n" % author.get('url'))
+            write_string("[debug2] duration: duration = %s\n" % int_or_none(video.get('duration')))
+
         return {
             'id': video_id,
             'title': title,
