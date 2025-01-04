@@ -42,6 +42,8 @@ class RumbleEmbedIE(InfoExtractor):
         video = self._download_json(
             'https://rumble.com/embedJS/', video_id,
             query={'request': 'video', 'v': video_id})
+        # In cases, where "video" does not return a 'dict' object, then we must raise an Exception with a possible
+        # reason, which is most likely because the video does not exist.
         if not isinstance(video, dict):
             raise ExtractorError("%s is most likely not found" % url,
                                  None,
