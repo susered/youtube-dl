@@ -45,7 +45,7 @@ class Preprocessor(URLOperations):
 
             https://old.bitchute.com/video/B1OGUWot5hU1
 
-        , where video extract occurs
+        , where video extract occurs. The initial mapping takes place in preprocessor/__init__.py
 
         :param url: str
         :return: str | None
