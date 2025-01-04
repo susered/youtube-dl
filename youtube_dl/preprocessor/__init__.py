@@ -22,7 +22,6 @@ regex_to_get_path_from_url: str = r'https?:\/\/[0-9a-zA-Z\.\-]*\/(.*)\/?'
 domain_to_video_id_regex_filters_dict: dict = {
     'rumble.com': generic_video_id_regex_filter,
     'www.bitchute.com': r'.*\/video\/([0-9a-zA-Z]*)',
-    'vimeo.com': r'.*\/([0-9a-zA-Z]*)',
 }
 domain_to_video_id_regex_filters_dict.setdefault('default', generic_video_id_regex_filter)
 
@@ -32,7 +31,6 @@ domain_to_path_regex_filters_dict: dict = {
     'rumble.com': 'embed',
     'bitchute.com': 'video',
     'www.bitchute.com': 'video',
-    'vimeo.com': '',
 }
 domain_to_path_regex_filters_dict.setdefault('default', '')
 
