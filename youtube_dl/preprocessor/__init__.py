@@ -19,14 +19,6 @@ regex_to_get_path_from_url: str = r'https?:\/\/[0-9a-zA-Z\.\-]*\/(.*)\/?'
 
 #
 # This maps a DNS domain to the RegEx that will govern the video ID extraction
-domain_path_video_id_format: dict = {
-    'rumble.com': 'https://domain/path/video_id',
-    'bitchute.com': 'https://domain/path/video_id',
-    'vimeo.com': 'https://domain/video_id',
-}
-
-#
-# This maps a DNS domain to the RegEx that will govern the video ID extraction
 domain_to_video_id_regex_filters_dict: dict = {
     'rumble.com': generic_video_id_regex_filter,
     'www.bitchute.com': r'.*\/video\/([0-9a-zA-Z]*)',
