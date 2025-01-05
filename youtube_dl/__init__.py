@@ -177,7 +177,8 @@ def _real_main(argv=None):
             try:
                 # Construct the URL for extraction
                 url_string = "https://" + map_from_one_domain_to_another + "/" + map_domain_to_url_path
-                write_string("[INFO][PRE-PROCESSOR] Converted %s to usable DNS domain\n" % url_strip)
+                write_string("[INFO][PRE-PROCESSOR] Converted %s to usable DNS domain for extraction " % url_strip)
+                write_string("%s\n" % url_string)
                 if opts.verbose:
                     write_string("[debug2] url_string = %s\n" % url_string)
                 preproc_collect_urls_from_args = url_string
