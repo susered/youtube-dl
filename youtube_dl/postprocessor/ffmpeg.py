@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
 import os
+import platform
 import subprocess
 import time
 import re
 
 
-from .common import AudioConversionError, PostProcessor
+from .common import AudioConversionError, PostProcessor, VideoPostProcessingTools
 
 from ..compat import compat_open as open
 from ..utils import (
@@ -220,7 +221,21 @@ class FFmpegPostProcessor(PostProcessor):
 
         if self._downloader.params.get('verbose', False):
             self._downloader.to_screen('[debug] ffmpeg command line: %s' % shell_quote(cmd))
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
+        # Instantiate the class that is needed for versions comparisons
+        video_postprocessor = VideoPostProcessingTools()
+        # Compare the python version used to invoke the script versus the version (3.2)
+        # that introduced, 'start_new_session'.
+        if video_postprocessor.compare_versions(platform.python_version(), "3.2") >= 0:
+            if self._downloader.params.get('verbose', False):
+                self._downloader.to_screen('[debug] Detected Python version is greater than 3.2.' % shell_quote(cmd))
+                self._downloader.to_screen('[debug] ffmpeg subprocess going to start a new process using'
+                                           ' \'start_new_session\' option in Popen().')
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,
+                             start_new_session=True)
+        else:
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+
         stdout, stderr = process_communicate_or_kill(p)
         if p.returncode != 0:
             stderr = stderr.decode('utf-8', 'replace')
