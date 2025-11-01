@@ -228,7 +228,7 @@ class FFmpegPostProcessor(PostProcessor):
         # that introduced, 'start_new_session'.
         if video_postprocessor.compare_versions(platform.python_version(), "3.2") >= 0:
             if self._downloader.params.get('verbose', False):
-                self._downloader.to_screen('[debug] Detected Python version is greater than 3.2.' % shell_quote(cmd))
+                self._downloader.to_screen('[debug] Detected Python version (%r) is greater than or equal to 3.2 for Popen.subprocess().' % shell_quote(cmd))
                 self._downloader.to_screen('[debug] ffmpeg subprocess going to start a new process using'
                                            ' \'start_new_session\' option in Popen().')
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE,
