@@ -361,6 +361,12 @@ class FileDownloader(object):
         if filename is not None and _get_merge_output_format is not None:
             _filename, _filename_extension = os.path.splitext(filename)
             _filename_plus_output_format = _filename + "." + _get_merge_output_format
+            _filename_full_path_plus_output_format = (os.getcwd() + "/" + _filename_plus_output_format)
+
+            if _filename_full_path_plus_output_format is not None:
+                if self.params.get('verbose'):
+                    self.to_screen('[debug] This is the destination full path to the filename, %r: %r '
+                          % (_filename_plus_output_format, _filename_full_path_plus_output_format))
 
             if _filename_plus_output_format is not None:
                 if self.params.get('verbose'):
@@ -369,15 +375,21 @@ class FileDownloader(object):
                                    % _filename_plus_output_format)
 
             _encoded_filename = encodeFilename(_filename_plus_output_format)
+            _encoded_filename_plus_full_path = encodeFilename(_filename_full_path_plus_output_format)
             if self.params.get('verbose'):
                 self.to_screen('[debug] Encoded filename -> _encoded_filename = %r' % _encoded_filename)
+                self.to_screen('[debug] Encoded filename -> _encoded_filename_plus_full_path = %r' % _encoded_filename_plus_full_path)
 
-            if os.path.isfile(_encoded_filename):
+            if os.path.isfile(_encoded_filename) or os.path.isfile(_encoded_filename_plus_full_path):
                 if self.params.get('verbose'):
                     self.to_screen('[debug] Encoded filename exists -> _encoded_filename = %r' % _encoded_filename)
+                    self.to_screen('[debug] Encoded filename exists -> _encoded_filename_plus_full_path = %r' % _encoded_filename_plus_full_path)
 
-                filename = _encoded_filename
-                self.report_file_already_downloaded(filename)
+                for find_file in (_encoded_filename, _encoded_filename_plus_full_path):
+                    if os.path.isfile(find_file):
+                        filename = find_file
+                        self.report_file_already_downloaded(filename)
+                        break
 
                 if self.params.get('verbose'):
                     self.to_screen('[debug] os.path.getsize(encodeFilename(filename)) = %r' %
